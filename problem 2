@@ -1,0 +1,54 @@
+def collect_jobs():
+    total = int(input("Number of jobs to schedule: "))
+    jobs = []
+    for idx in range(total):
+        name = f"Proc{idx+1}"
+        arr = int(input(f"When does {name} arrive? "))
+        dur = int(input(f"How long does {name} run? "))
+        jobs.append({'name': name, 'arrive': arr, 'length': dur, 'done': False})
+    return jobs
+
+def sjf_nonpreemptive(jobs):
+    t = 0
+    finished = 0
+    n = len(jobs)
+    timeline = []
+    while finished < n:
+        ready = [j for j in jobs if j['arrive'] <= t and not j['done']]
+        if not ready:
+            t += 1
+            continue
+        ready.sort(key=lambda j: (j['length'], j['arrive']))
+        job = ready[0]
+        start = t
+        end = t + job['length']
+        tat = end - job['arrive']
+        wait = tat - job['length']
+        timeline.append({
+            'name': job['name'],
+            'arrive': job['arrive'],
+            'length': job['length'],
+            'finish': end,
+            'turnaround': tat,
+            'waiting': wait
+        })
+        job['done'] = True
+        finished += 1
+        t = end
+    return timeline
+
+def print_schedule(timeline):
+    print("\nJob  Arr  Len  Done  TAT  Wait")
+    for j in timeline:
+        print(f"{j['name']:>4}  {j['arrive']:>3}  {j['length']:>3}  {j['finish']:>4}  {j['turnaround']:>3}  {j['waiting']:>3}")
+    avg_wait = sum(j['waiting'] for j in timeline) / len(timeline)
+    print(f"\nAverage waiting: {avg_wait:.2f}")
+
+def run():
+    print("\n--- SJF (Shortest Job First) Scheduling ---\n")
+    jobs = collect_jobs()
+    result = sjf_nonpreemptive(jobs)
+    print_schedule(result)
+
+if __name__ == "__main__":
+    run()
