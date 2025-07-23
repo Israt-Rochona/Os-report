@@ -1,0 +1,32 @@
+def main():
+    print("FIRST COME FIRST SERVE SCHEDULING")
+    num = int(input("Enter number of processes : "))
+    processes = []
+    for idx in range(num):
+        pname = f"P{idx+1}"
+        atime = int(input(f"Enter arrival time of process {idx+1}: "))
+        btime = int(input(f"Enter burst time of process {idx+1}: "))
+        processes.append({'name': pname, 'arrival': atime, 'burst': btime})
+
+   
+    processes.sort(key=lambda x: x['arrival'])
+
+    exit_times = []
+    current_time = 0
+    for i, proc in enumerate(processes):
+        if current_time < proc['arrival']:
+            current_time = proc['arrival']
+        current_time += proc['burst']
+        exit_times.append(current_time)
+
+    tat = [exit_times[i] - processes[i]['arrival'] for i in range(num)]
+    wt = [tat[i] - processes[i]['burst'] for i in range(num)]
+    avg_wt = sum(wt) / num
+
+    print("Process | Arrival | Burst | Exit | Turn Around | Wait |")
+    for i in range(num):
+        print(f"   {processes[i]['name']}    |   {processes[i]['arrival']} |    {processes[i]['burst']} |    {exit_times[i]}  |    {tat[i]}  |   {wt[i]}   |  ")
+    print("Average Waiting Time: ", avg_wt)
+
+if __name__ == "__main__":
+    main() 
