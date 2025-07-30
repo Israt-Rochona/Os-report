@@ -1,0 +1,60 @@
+def round_robin():
+    processes = [
+        ["P1", 0, 5],
+        ["P2", 1, 3],
+        ["P3", 2, 1],
+        ["P4", 3, 2],
+        ["P5", 4, 3],
+    ]
+    
+    time_quantum = 2
+    processes.sort(key=lambda x: x[1]) 
+    n = len(processes)
+    ready_queue = []
+    remaining_bt = {p[0]: p[2] for p in processes}
+    AT = {p[0]: p[1] for p in processes}  
+    CT = {}
+    gantt_chart = []
+
+    P_time = 0
+    i = 0 
+
+    def add_new_processes():
+        nonlocal i
+        while i < n and processes[i][1] <= P_time:
+            ready_queue.append(processes[i][0])
+            i += 1
+
+    while len(CT) < n:
+        add_new_processes()
+
+        if ready_queue:
+            pid = ready_queue.pop(0)
+            exec_time = min(time_quantum, remaining_bt[pid])
+            gantt_chart.append((pid, P_time, P_time + exec_time))
+            P_time += exec_time
+            remaining_bt[pid] -= exec_time
+
+            add_new_processes()
+
+            if remaining_bt[pid] > 0:
+                ready_queue.append(pid)
+            else:
+                CT[pid] = P_time
+        else:
+            P_time = processes[i][1]
+    print("Gantt Chart:")
+    for pid, start, end in gantt_chart:
+        print(f"{start} [{pid}] {end}")
+
+    print("\nProcess\tAT\tBT\tCT\tTAT\tWT")
+    total_tat = 0
+    total_wt = 0
+    for pid, at, bt in processes:
+        ct = CT[pid]
+        tat = ct - at
+        wt = tat - bt
+        total_tat += tat
+        total_wt += wt
+        print(f"{pid}\t{at}\t{bt}\t{ct}\t{tat}\t{wt}")
+round_robin()
