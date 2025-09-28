@@ -1,0 +1,148 @@
+
+def scan_disk_scheduling(requests, initial_head, disk_size, direction='right'):
+    """
+    SCAN Disk Scheduling Algorithm Implementation
+    
+    Args:
+        requests: List of track requests
+        initial_head: Initial head position
+        disk_size: Total number of cylinders (0 to disk_size-1)
+        direction: Initial direction ('left' or 'right')
+    
+    Returns:
+        Dictionary containing service order, head movement path, total movement, and average movement
+    """
+    remaining_requests = requests.copy()
+    service_order = []
+    head_movement_path = [initial_head]
+    total_head_movement = 0
+    current_head = initial_head
+    
+    print(f"SCAN Disk Scheduling Algorithm")
+    print(f"Request Sequence: {requests}")
+    print(f"Initial Head Position: {initial_head}")
+    print(f"Disk Size: {disk_size} cylinders (0 to {disk_size-1})")
+    print(f"Initial Direction: {direction}")
+    print("-" * 50)
+    if direction == 'right':
+      
+        print("Phase 1: Moving RIGHT (towards higher cylinder numbers)")
+        right_requests = [req for req in remaining_requests if req >= current_head]
+        right_requests.sort()
+        
+        for request in right_requests:
+            movement = abs(request - current_head)
+            total_head_movement += movement
+            service_order.append(request)
+            head_movement_path.append(request)
+            current_head = request
+            print(f"  Head moves from {head_movement_path[-2]} to {request} (movement: {movement})")
+       
+        left_requests = [req for req in remaining_requests if req < initial_head]
+        if left_requests:
+            movement = abs(disk_size - 1 - current_head)
+            total_head_movement += movement
+            head_movement_path.append(disk_size - 1)
+            current_head = disk_size - 1
+            print(f"  Head moves to end of disk: {disk_size - 1} (movement: {movement})")
+        
+        print("\nPhase 2: Moving LEFT (towards lower cylinder numbers)")
+        left_requests.sort(reverse=True) 
+        
+        for request in left_requests:
+            movement = abs(request - current_head)
+            total_head_movement += movement
+            service_order.append(request)
+            head_movement_path.append(request)
+            current_head = request
+            print(f"  Head moves from {head_movement_path[-2]} to {request} (movement: {movement})")
+    
+    else:  
+       
+        print("Phase 1: Moving LEFT (towards lower cylinder numbers)")
+        
+        # Service all requests in the left direction
+        left_requests = [req for req in remaining_requests if req <= current_head]
+        left_requests.sort(reverse=True)
+        
+        for request in left_requests:
+            movement = abs(request - current_head)
+            total_head_movement += movement
+            service_order.append(request)
+            head_movement_path.append(request)
+            current_head = request
+            print(f"  Head moves from {head_movement_path[-2]} to {request} (movement: {movement})")
+        
+        right_requests = [req for req in remaining_requests if req > initial_head]
+        if right_requests:
+            movement = abs(0 - current_head)
+            total_head_movement += movement
+            head_movement_path.append(0)
+            current_head = 0
+            print(f"  Head moves to beginning of disk: 0 (movement: {movement})")
+        
+     
+        print("\nPhase 2: Moving RIGHT (towards higher cylinder numbers)")
+        right_requests.sort()
+        
+        for request in right_requests:
+            movement = abs(request - current_head)
+            total_head_movement += movement
+            service_order.append(request)
+            head_movement_path.append(request)
+            current_head = request
+            print(f"  Head moves from {head_movement_path[-2]} to {request} (movement: {movement})")
+    
+    average_movement = total_head_movement / len(requests) if len(requests) > 0 else 0
+    
+    return {
+        'service_order': service_order,
+        'head_movement_path': head_movement_path,
+        'total_head_movement': total_head_movement,
+        'average_head_movement': average_movement
+    }
+
+
+def main():
+    request_sequence = [11, 34, 41, 50, 52, 69, 70, 114]
+    initial_head_position = 50
+    disk_size = 200
+    
+    print("=" * 60)
+    print("SCAN DISK SCHEDULING ALGORITHM")
+    print("=" * 60)
+    
+    result = scan_disk_scheduling(request_sequence, initial_head_position, disk_size, 'right')
+    
+    print("\n" + "=" * 60)
+    print("RESULTS SUMMARY")
+    print("=" * 60)
+    
+    print(f"Service Order: {result['service_order']}")
+    print(f"Head Movement Path: {result['head_movement_path']}")
+    print(f"Total Head Movement: {result['total_head_movement']} tracks")
+    print(f"Average Head Movement per Request: {result['average_head_movement']:.2f} tracks")
+    
+    print(f"\nDetailed Analysis:")
+    print(f"- Number of requests: {len(request_sequence)}")
+    print(f"- Requests serviced: {len(result['service_order'])}")
+    print(f"- Total tracks traversed: {result['total_head_movement']}")
+    print(f"- Efficiency: {result['average_head_movement']:.2f} tracks per request")
+
+    print(f"\nMovement Pattern:")
+    path = result['head_movement_path']
+    for i in range(len(path) - 1):
+        print(f"  {path[i]} → {path[i+1]} (distance: {abs(path[i+1] - path[i])})")
+
+
+if __name__ == "__main__":
+    main()
+
+
+
+
+
+
+
+
+
