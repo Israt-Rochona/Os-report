@@ -1,0 +1,26 @@
+def sstf(requests, start):
+    requests = requests[:]
+    head = start
+    order = []
+    total_movement = 0
+
+    if head in requests:
+        order.append(head)
+        requests.remove(head)
+
+    while requests:
+        next_req = min(requests, key=lambda r: abs(r - head))
+        total_movement += abs(next_req - head)
+        head = next_req
+        order.append(next_req)
+        requests.remove(next_req)
+
+    return order, total_movement
+
+
+if __name__ == "__main__":
+    requests = [11, 34, 41, 50, 52, 69, 70, 114]
+    start = 50
+    order, movement = sstf(requests, start)
+    print("Service order:", order)
+    print("Total head movement:", movement)
