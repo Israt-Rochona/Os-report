@@ -1,0 +1,120 @@
+from dataclasses import dataclass, field
+from typing import List, Dict, Tuple
+
+
+@dataclass
+class Process:
+    pid: str
+    arrival_time: int
+    burst_time: int
+    priority: int
+    # Computed fields
+    completion_time: int = field(default=0)
+    turnaround_time: int = field(default=0)
+    waiting_time: int = field(default=0)
+
+
+def priority_scheduling_non_preemptive(processes: List[Process], lower_is_higher: bool = True) -> Tuple[List[Process], List[Tuple[int, str]]]:
+    """
+    Non-preemptive Priority Scheduling.
+
+    - lower_is_higher: if True, smaller priority value means higher priority (e.g., 0 is highest)
+    Returns the updated processes list (with CT/TAT/WT) and the Gantt chart as (time, pid) tuples marking start times.
+    """
+    processes_sorted = sorted(processes, key=lambda p: (p.arrival_time, p.pid))
+    n = len(processes_sorted)
+    time = 0
+    completed = 0
+    is_taken = [False] * n
+    gantt: List[Tuple[int, str]] = []
+
+    while completed < n:
+        # Collect ready queue
+        ready_indices: List[int] = [i for i, p in enumerate(processes_sorted) if (not is_taken[i]) and p.arrival_time <= time]
+
+        if not ready_indices:
+            # Jump time to next arrival
+            next_arrival = min(p.arrival_time for i, p in enumerate(processes_sorted) if not is_taken[i])
+            time = max(time, next_arrival)
+            ready_indices = [i for i, p in enumerate(processes_sorted) if (not is_taken[i]) and p.arrival_time <= time]
+
+        # Choose the highest priority among ready; tie-breaker by arrival_time then pid
+        def priority_key(i: int):
+            p = processes_sorted[i]
+            # For lower_is_higher, sort by priority ascending; else descending
+            primary = p.priority if lower_is_higher else -p.priority
+            return (primary, p.arrival_time, p.pid)
+
+        idx = min(ready_indices, key=priority_key)
+        proc = processes_sorted[idx]
+
+        # Execute non-preemptively
+        gantt.append((time, proc.pid))
+        start_time = time
+        time += proc.burst_time
+        proc.completion_time = time
+        proc.turnaround_time = proc.completion_time - proc.arrival_time
+        proc.waiting_time = proc.turnaround_time - proc.burst_time
+        is_taken[idx] = True
+        completed += 1
+
+    return processes_sorted, gantt
+
+
+def print_results(processes: List[Process]) -> None:
+    # Order by pid for display
+    by_pid = sorted(processes, key=lambda p: p.pid)
+    header = (
+        f"{'PID':<6}" +
+        f"{'AT':>6}" +
+        f"{'BT':>6}" +
+        f"{'PR':>6}" +
+        f"{'CT':>8}" +
+        f"{'TAT':>8}" +
+        f"{'WT':>8}"
+    )
+    print(header)
+    print("-" * len(header))
+    total_wt = 0
+    total_tat = 0
+    for p in by_pid:
+        total_wt += p.waiting_time
+        total_tat += p.turnaround_time
+        print(
+            f"{p.pid:<6}" +
+            f"{p.arrival_time:>6}" +
+            f"{p.burst_time:>6}" +
+            f"{p.priority:>6}" +
+            f"{p.completion_time:>8}" +
+            f"{p.turnaround_time:>8}" +
+            f"{p.waiting_time:>8}"
+        )
+    n = len(by_pid)
+    avg_wt = total_wt / n if n else 0.0
+    avg_tat = total_tat / n if n else 0.0
+    print("\nAverage Waiting Time:", round(avg_wt, 2))
+    print("Average Turnaround Time:", round(avg_tat, 2))
+
+
+def print_gantt(gantt: List[Tuple[int, str]]) -> None:
+    if not gantt:
+        return
+    print("\nGantt Chart (start times):")
+    for start, pid in gantt:
+        print(f"{start:>3} | {pid}")
+
+
+if __name__ == "__main__":
+    # Given input
+    given_processes: List[Process] = [
+        Process("P1", arrival_time=0,  burst_time=11, priority=2),
+        Process("P2", arrival_time=5,  burst_time=28, priority=0),
+        Process("P3", arrival_time=12, burst_time=2,  priority=3),
+        Process("P4", arrival_time=2,  burst_time=10, priority=1),
+        Process("P5", arrival_time=9,  burst_time=16, priority=4),
+    ]
+
+    scheduled, gantt = priority_scheduling_non_preemptive(given_processes, lower_is_higher=True)
+    print_results(scheduled)
+    print_gantt(gantt)
+
