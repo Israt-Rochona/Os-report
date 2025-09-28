@@ -1,0 +1,17 @@
+requests = [0, 16, 24, 43, 50, 82, 100, 140, 150, 170, 190, 199]
+head = 50
+
+print("FCFS Disk Scheduling")
+print("Requests:", requests)
+print("Initial head:", head)
+
+total = 0
+print("Movement sequence (from -> to : distance):")
+for r in requests:
+    dist = abs(r - head)
+    print(" ", head, "->", r, ":", dist)
+    total += dist
+    head = r
+
+print("\nNumber of seek operations:", len(requests))
+print("Total head movement (absolute distance):", total)
