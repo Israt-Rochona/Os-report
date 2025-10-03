@@ -1,0 +1,92 @@
+def cscan_schedule(requests, initial_head, direction="up", max_track=199, count_wrap=True):
+    """
+    Compute C-SCAN scheduling metrics.
+
+    Params:
+      - requests: list of track numbers to service
+      - initial_head: starting head position
+      - direction: "up" (towards higher tracks) or "down"
+      - max_track: highest track number (tracks are 0..max_track)
+      - count_wrap: whether to count the wrap-around movement (end -> start) in total distance
+
+    Returns:
+      - service_order: order of requests serviced
+      - head_path: full head movement path including end/start if applicable
+      - total_movement: total tracks traversed
+      - average_movement: total_movement / number of requests
+    """
+    reqs = sorted(requests)
+    path = [initial_head]
+
+    if direction == "up":
+        higher = [r for r in reqs if r >= initial_head]
+        lower = [r for r in reqs if r < initial_head]
+        service_order = higher + lower
+
+        for r in higher:
+            path.append(r)
+
+        if path[-1] != max_track:
+            path.append(max_track)
+
+        if count_wrap:
+            path.append(0)
+        else:
+            path.append(0)
+
+        for r in lower:
+            path.append(r)
+
+    else:
+        lower = [r for r in reqs if r <= initial_head]
+        higher = [r for r in reqs if r > initial_head][::-1]
+        lower = lower[::-1]
+        service_order = lower + higher
+
+        for r in lower:
+            path.append(r)
+
+        if path[-1] != 0:
+            path.append(0)
+
+        if count_wrap:
+            path.append(max_track)
+        else:
+            path.append(max_track)
+
+        for r in higher:
+            path.append(r)
+
+    total_movement = 0
+    for i in range(1, len(path)):
+        step = abs(path[i] - path[i - 1])
+
+        if not count_wrap:
+            is_wrap = (path[i - 1] == max_track and path[i] == 0) or (path[i - 1] == 0 and path[i] == max_track)
+            if is_wrap:
+                continue
+
+        total_movement += step
+
+    average_movement = total_movement / len(requests) if requests else 0.0
+    return service_order, path, total_movement, average_movement
+
+
+if __name__ == "__main__":
+    requests = [21, 39, 64, 79, 90, 176]
+    initial_head = 50
+    max_track = 199
+
+    svc, path, total, avg = cscan_schedule(requests, initial_head, "up", max_track, count_wrap=True)
+    print("With wrap counted:")
+    print("Service order:", svc)
+    print("Head path:", path)
+    print("Total movement:", total)
+    print("Average per request:", avg)
+
+    svc2, path2, total2, avg2 = cscan_schedule(requests, initial_head, "up", max_track, count_wrap=False)
+    print("\nWithout wrap counted:")
+    print("Service order:", svc2)
+    print("Head path:", path2)
+    print("Total movement:", total2)
+    print("Average per request:", avg2)
