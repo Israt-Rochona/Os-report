@@ -1,0 +1,108 @@
+from collections import deque
+import sys
+import argparse
+def _read_nonempty_line() -> str:
+    while True:
+        line = input()
+        if line is None:
+            return ""
+        line = line.lstrip("\ufeff").strip()
+        if line != "":
+            return line
+
+def _read_noninteractive_inputs():
+    data = sys.stdin.read()
+    if not isinstance(data, str):
+        data = data.decode("utf-8", errors="ignore")
+    data = data.replace("\r", "\n")
+    lines = [ln.lstrip("\ufeff").strip() for ln in data.split("\n") if ln.strip() != ""]
+    if len(lines) < 3:
+        raise ValueError("Not enough input lines")
+    frame_capacity = int(lines[0])
+    total_references = int(lines[1])
+    references = list(map(int, lines[2].split()))
+    return frame_capacity, total_references, references
+
+
+def main():
+    try:
+        parser = argparse.ArgumentParser(add_help=False)
+        parser.add_argument("--frames", type=int)
+        parser.add_argument("--n", type=int)
+        parser.add_argument("--refs", type=str)
+        args, _ = parser.parse_known_args()
+
+        if args.frames is not None and args.n is not None and args.refs is not None:
+            frame_capacity = int(args.frames)
+            total_references = int(args.n)
+            references = list(map(int, args.refs.split()))
+        elif sys.stdin.isatty():
+            frame_capacity = int(input("Frames count: ").strip())
+            total_references = int(input("Total references: ").strip())
+            print("References: ", end="")
+            references = list(map(int, input().strip().split()))
+        else:
+            try:
+                frame_capacity, total_references, references = _read_noninteractive_inputs()
+            except Exception:
+                with open("input.txt", "r", encoding="utf-8-sig") as fh:
+                    raw = fh.read().replace("\r", "\n")
+                lines = [ln.strip() for ln in raw.split("\n") if ln.strip() != ""]
+                frame_capacity = int(lines[0])
+                total_references = int(lines[1])
+                references = list(map(int, lines[2].split()))
+        if len(references) != total_references:
+            print(f"\nWarning: expected {total_references} values, got {len(references)}.")
+
+        frames = deque()
+        in_frames = set()
+        hits = 0
+        faults = 0
+
+        print("\nRef  | Frames (oldest → newest)      | Result")
+        print("-----+--------------------------------+--------")
+
+        for ref in references:
+            is_hit = ref in in_frames
+            if is_hit:
+                hits += 1
+            else:
+                faults += 1
+                if len(frames) == frame_capacity and frame_capacity > 0:
+                    victim = frames.popleft()
+                    in_frames.remove(victim)
+                if frame_capacity > 0:
+                    frames.append(ref)
+                    in_frames.add(ref)
+
+            print(f"{ref:>3}  | [ ", end="")
+            for p in frames:
+                print(f"{p} ", end="")
+            print("]", end="")
+
+            approx_width = len(frames) * 2 + 3
+            if approx_width < 30:
+                print(" " * (30 - approx_width), end="")
+
+            print(f" | {'HIT' if is_hit else 'MISS'}")
+
+        hit_rate = (hits / len(references) * 100.0) if references else 0.0
+
+        print("\nSummary")
+        print(f"Page faults: {faults}")
+        print(f"Page hits  : {hits}")
+        print(f"Hit rate   : {hit_rate:.2f}%")
+
+    except ValueError:
+        print("Invalid input. Please enter integers only.")
+
+
+if __name__ == "__main__":
+    main()
+
+
+
+
+
+
+
