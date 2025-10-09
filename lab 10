@@ -1,0 +1,21 @@
+def lru(pages, n):
+    f, last, fault, hit = [], {}, 0, 0
+    for i, p in enumerate(pages):
+        if p not in f:
+            if len(f) < n:
+                f.append(p)
+            else:
+                old = min(f, key=lambda x: last[x])
+                f[f.index(old)] = p
+            fault += 1
+            print(f"{p} -> Fault | {f}")
+        else:
+            hit += 1
+            print(f"{p} -> Hit   | {f}")
+        last[p] = i
+    print("\nFaults:", fault, "Hits:", hit)
+    print("Hit Ratio:", round(hit / len(pages) * 100, 2), "%")
+
+pages = [7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0]
+n = int(input("Frame size: "))
+lru(pages, n)
