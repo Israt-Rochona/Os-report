@@ -1,0 +1,32 @@
+def lru_page_replacement(pages, capacity):
+    frames = []            # Holds current pages in memory
+    page_faults = 0
+
+    print(f"{'Step':<5}{'Page':<8}{'Frames':<20}{'Page Fault'}")
+    print("-" * 45)
+
+    for i, page in enumerate(pages):
+        if page not in frames:
+            page_faults += 1
+            # If frame is full, remove the least recently used page
+            if len(frames) == capacity:
+                frames.pop(0)
+            frames.append(page)
+            fault_status = "Yes"
+        else:
+            # Move the page to the end (most recently used)
+            frames.remove(page)
+            frames.append(page)
+            fault_status = "No"
+        
+        print(f"{i+1:<5}{page:<8}{str(frames):<20}{fault_status}")
+
+    print("\nTotal Page Faults:", page_faults)
+    print("Total Page Hits:", len(pages) - page_faults)
+
+
+# Hardcoded input (as per the question)
+reference_string = [7, 0, 1, 2, 0, 3, 0, 4, 2, 3]
+capacity = 3
+
+lru_page_replacement(reference_string, capacity)
